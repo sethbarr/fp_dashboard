@@ -1,4 +1,4 @@
-import dash
+vimport dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 app = dash.Dash(__name__)
-
+server = app.server
 
 # Custom CSS for better styling
 app.index_string = '''
