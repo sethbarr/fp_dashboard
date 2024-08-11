@@ -222,28 +222,28 @@ app.layout = html.Div([
                     html.Label("NETEN Color"),
                     daq.ColorPicker(
                         id='neten-color',
-                        value=dict(hex='#FFA500')  # Orange
+                        value=dict(hex='#003f5c')  # Orange
                     )
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPIM Color"),
                     daq.ColorPicker(
                         id='dmpim-color',
-                        value=dict(hex='#0000FF')  # Blue
+                        value=dict(hex='#7a5195')  # Blue
                     )
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPSC Color"),
                     daq.ColorPicker(
                         id='dmpsc-color',
-                        value=dict(hex='#008000')  # Green
+                        value=dict(hex='#ef5675')  # Green
                     )
                 ], className='input-group'),
                 html.Div([
-                    html.Label("Cost Saving Color"),
+                    html.Label("Efficiency Gain Color"),
                     daq.ColorPicker(
                         id='cost-saving-color',
-                        value=dict(hex='#808080')  # Grey
+                        value=dict(hex='#ffa600')  # Grey
                     )
                 ], className='input-group')
             ])
@@ -429,7 +429,7 @@ def update_graph(submit_n_clicks, export_n_clicks,
 
     fig.update_layout(
         barmode='stack',
-        title=f'Budget impact analysis of DMPA-SC introduction in South Africa over 4 years',
+        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
