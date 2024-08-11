@@ -143,12 +143,50 @@ app.layout = html.Div([
                 ])
             ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'top'}),
         ], className='input-container'),
-        
+        html.Div([
+            html.H3("Starting Population Sizes"),
+            html.Div([
+                html.Div([
+                    html.Label("NETEN Starting Population"),
+                    dcc.Input(id='neten-start-pop', type='number', value=500000)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPIM Starting Population"),
+                    dcc.Input(id='dmpim-start-pop', type='number', value=1700000)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPSC Starting Population"),
+                    dcc.Input(id='dmpsc-start-pop', type='number', value=0)
+                ], className='input-group'),
+            ])
+        ]),
+
+        html.Div([
+            html.H3("Override Population Sizes at Year Timepoints"),
+            html.Div([
+                html.Label("Year"),
+                dcc.Input(id='override-year', type='number', value=1)
+            ], className='input-group'),
+            html.Div([
+                html.Label("NETEN Population"),
+                dcc.Input(id='override-neten-pop', type='number')
+            ], className='input-group'),
+            html.Div([
+                html.Label("DMPIM Population"),
+                dcc.Input(id='override-dmpim-pop', type='number')
+            ], className='input-group'),
+            html.Div([
+                html.Label("DMPSC Population"),
+                dcc.Input(id='override-dmpsc-pop', type='number')
+            ], className='input-group'),
+        ]),
+
         html.Button('Update Plot', id='submit-button', n_clicks=0),
         
         dcc.Graph(id='stacked-bar-plot')
     ], className='container')
 ])
+
 
 def convert(n_source, n_sink, Conv):
     efflux = n_source * Conv
