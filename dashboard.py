@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
 import numpy as np
+import dash_daq as daq
 
 app = dash.Dash(__name__)
 server = app.server
@@ -211,8 +212,47 @@ app.layout = html.Div([
             ])
         ], className='container'),
         
-        html.Button('Update Plot', id='submit-button', n_clicks=0),
+        html.Div([
+            html.H3("Color Palette Picker"),
+            html.P("Select the colors for the different categories in the graph."),
+            html.Button('Show/Hide Color Pickers', id='color-picker-button', n_clicks=0),
+            html.Div(id='color-picker-div', style={'display': 'none'}, children=[
+                html.Div([
+                    html.Label("NETEN Color"),
+                    daq.ColorPicker(
+                        id='neten-color',
+                        value=dict(hex='#FFA500')  # Orange
+                    )
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPIM Color"),
+                    daq.ColorPicker(
+                        id='dmpim-color',
+                        value=dict(hex='#0000FF')  # Blue
+                    )
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPSC Color"),
+                    daq.ColorPicker(
+                        id='dmpsc-color',
+                        value=dict(hex='#008000')  # Green
+                    )
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Cost Saving Color"),
+                    daq.ColorPicker(
+                        id='cost-saving-color',
+                        value=dict(hex='#808080')  # Grey
+                    )
+                ], className='input-group')
+            ])
+        ], className='container'),
         
+        html.Button('Update Plot', id='submit-button', n_clicks=0),
+        html.Button('Export CSV', id='export-button', n_clicks=0),
+
+        dcc.Download(id="download-dataframe-csv"),
+
         dcc.Graph(id='stacked-bar-plot')
     ], className='container')
 ])
@@ -230,10 +270,23 @@ def convert(n_source, n_sink, Conv):
     n_source -= efflux
     n_sink += efflux
     return n_source, n_sink
+@app.callback(
+    Output('color-picker-div', 'style'),
+    Input('color-picker-button', 'n_clicks'),
+    State('color-picker-div', 'style')
+)
+def toggle_color_picker(n_clicks, style):
+    if n_clicks % 2 == 1:
+        return {'display': 'block'}
+    else:
+        return {'display': 'none'}
+
 
 @app.callback(
-    Output('stacked-bar-plot', 'figure'),
-    [Input('submit-button', 'n_clicks')],
+    [Output('stacked-bar-plot', 'figure'),
+     Output('download-dataframe-csv', 'data')],
+    [Input('submit-button', 'n_clicks'),
+     Input('export-button', 'n_clicks')],
     [State('neten-start-pop', 'value'),
      State('dmpim-start-pop', 'value'),
      State('dmpsc-start-pop', 'value'),
@@ -254,15 +307,27 @@ def convert(n_source, n_sink, Conv):
      State('pop-sizes-year-1', 'value'),
      State('pop-sizes-year-2', 'value'),
      State('pop-sizes-year-3', 'value'),
-     State('pop-sizes-year-4', 'value')]
+     State('pop-sizes-year-4', 'value'),
+     State('neten-color', 'value'),
+     State('dmpim-color', 'value'),
+     State('dmpsc-color', 'value'),
+     State('cost-saving-color', 'value')]
 )
-def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop, 
+def update_graph(submit_n_clicks, export_n_clicks, 
+                 neten_start_pop, dmpim_start_pop, 
+                 dmpsc_start_pop, 
                  neten_visit_cost, neten_product_cost, 
-                 dmpim_visit_cost, dmpim_product_cost, 
-                 dmpsc_visit_cost, dmpsc_product_cost, 
-                 dmpim_conv_rate_1, dmpim_conv_rate_2, dmpim_conv_rate_3, dmpim_conv_rate_4, 
-                 neten_conv_rate_1, neten_conv_rate_2, neten_conv_rate_3, neten_conv_rate_4, 
-                 pop_sizes_year_1, pop_sizes_year_2, pop_sizes_year_3, pop_sizes_year_4):
+                 dmpim_visit_cost, 
+                 dmpim_product_cost, dmpsc_visit_cost, 
+                 dmpsc_product_cost,
+                 dmpim_conv_rate_1, dmpim_conv_rate_2, 
+                 dmpim_conv_rate_3, dmpim_conv_rate_4, 
+                 neten_conv_rate_1, neten_conv_rate_2, 
+                 neten_conv_rate_3, neten_conv_rate_4, 
+                 pop_sizes_year_1, pop_sizes_year_2, 
+                 pop_sizes_year_3, pop_sizes_year_4,
+                 neten_color, dmpim_color, 
+                 dmpsc_color, cost_saving_color):
     
     dmpim_conv_rates = [dmpim_conv_rate_1, dmpim_conv_rate_2, dmpim_conv_rate_3, dmpim_conv_rate_4]
     neten_conv_rates = [neten_conv_rate_1, neten_conv_rate_2, neten_conv_rate_3, neten_conv_rate_4]
@@ -271,6 +336,7 @@ def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop,
     
     n_neten, n_dmpim, n_dmpsc = neten_start_pop, dmpim_start_pop, dmpsc_start_pop
     
+    # convert pct to proportion
     dmpim_Conv = [rate / 100 for rate in dmpim_conv_rates]
     neten_Conv = [rate / 100 for rate in neten_conv_rates]
     years = 4
@@ -296,31 +362,39 @@ def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop,
     neten_product_costs = [n * neten_product_cost for n in neten]
     dmpsc_product_costs = [d * dmpsc_product_cost for d in dmpsc]
 
-    baselinecost = sum(x[0] for x in [dmpim_visit_costs, dmpim_product_costs, neten_visit_costs, neten_product_costs])
-    tot_costs = [sum(x) for x in zip(dmpim_visit_costs,      dmpim_product_costs, 
+    baselinecost = sum(x[0] for x in [dmpim_visit_costs, dmpim_product_costs, neten_visit_costs, neten_product_costs, dmpsc_visit_costs, dmpsc_product_costs]) # adding sc costs in case there is a baseline with sc
+    tot_costs = [sum(x) for x in zip(dmpim_visit_costs, dmpim_product_costs, 
                                      dmpsc_visit_costs, dmpsc_product_costs, 
                                      neten_visit_costs, neten_product_costs)]
     baseline_diff = [x - baselinecost for x in tot_costs]
 
     df = pd.DataFrame({
-        'NETEN Product': neten_product_costs,
-        'NETEN Visit': neten_visit_costs,
-        'DMPIM Product': dmpim_product_costs,
-        'DMPIM Visit': dmpim_visit_costs,
-        'DMPSC Product': dmpsc_product_costs,
-        'DMPSC Visit': dmpsc_visit_costs,
+        'NET-EN Product': neten_product_costs,
+        'NET-EN Visit': neten_visit_costs,
+        'DMPA-IM Product': dmpim_product_costs,
+        'DMPA-IM Visit': dmpim_visit_costs,
+        'DMPA-SC Product': dmpsc_product_costs,
+        'DMPA-SC Visit': dmpsc_visit_costs,
         'Efficiency gain': np.abs(baseline_diff)
     })
     
+    df_users = pd.DataFrame({
+        'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
+        'NET-EN': neten,
+        'DMPA-IM': dmpim,
+        'DMPA-SC': dmpsc,
+    })
+
     # Divide all costs by 1 billion
     for column in df.columns:
         df[column] = df[column] / 1e9
 
+    # Picker colors
     colors = {
-        'NETEN': '#58508d',
-        'DMPIM': '#003f5c',
-        'DMPSC': '#ef5675',
-        'Efficiency gain': '#ffa600'
+        'NET-EN': neten_color['hex'],
+        'DMPA-IM': dmpim_color['hex'],
+        'DMPA-SC': dmpsc_color['hex'],
+        'Efficiency gain': cost_saving_color['hex']
     }
 
     fig = go.Figure()
@@ -330,13 +404,13 @@ def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop,
     for column in df.columns:
         if 'Visit' in column:
             fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column.split()[0]], opacity=1))
+                                 marker_color=colors[column.split()[0]], opacity=0.65))
         elif 'Product' in column:
             fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column.split()[0]], opacity=0.5))
+                                 marker_color=colors[column.split()[0]], opacity=1))
         else:  # Efficiency gain
             fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column], opacity=0.5))
+                                 marker_color=colors[column], opacity=1))
 
     fig.update_layout(
         barmode='stack',
@@ -347,7 +421,27 @@ def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop,
         legend=dict(x=1.05, y=1, bordercolor="Black", borderwidth=2)
     )
 
-    return fig
+# make output df for csv
+    df_costs = pd.DataFrame({
+        'Year': ['Baseline (Years 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
+        'NET-EN Product': neten_product_costs,
+        'NET-EN Visit': neten_visit_costs,
+        'DMPA-IM Product': dmpim_product_costs,
+        'DMPA-IM Visit': dmpim_visit_costs,
+        'DMPA-SC Product': dmpsc_product_costs,
+        'DMPA-SC Visit': dmpsc_visit_costs,
+        'Efficiency gain': np.abs(baseline_diff)
+    })
+    
+    df_combined = pd.merge(df_users, df_costs, on='Year')
+
+
+    csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
+
+    if export_n_clicks > 0:
+        return fig, csv_data
+    else:
+        return fig, None
 
 if __name__ == '__main__':
     app.run_server(debug=True)
