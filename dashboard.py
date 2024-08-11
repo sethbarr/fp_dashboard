@@ -190,30 +190,31 @@ app.layout = html.Div([
         ], className='container'),
         
         html.Div([
-            html.H3("Manually defined Population Sizes (Optional)"),
-            html.P("Optionally, specify the injectables user population sizes for each year if you want to override the model's calculations."),
-            html.Div([
-                html.Div([
-                    html.Label("Year 1 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-                    dcc.Input(id='pop-sizes-year-1', type='text', placeholder='e.g., 450000, 1600000, 50000')
-                ], className='input-group'),
-                html.Div([
-                    html.Label("Year 2 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-                    dcc.Input(id='pop-sizes-year-2', type='text', placeholder='e.g., 400000, 1500000, 100000')
-                ], className='input-group'),
-                html.Div([
-                    html.Label("Year 3 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-                    dcc.Input(id='pop-sizes-year-3', type='text', placeholder='e.g., 350000, 1400000, 150000')
-                ], className='input-group'),
-                html.Div([
-                    html.Label("Year 4 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-                    dcc.Input(id='pop-sizes-year-4', type='text', placeholder='e.g., 300000, 1300000, 200000')
-                ], className='input-group'),
-            ])
+    html.H3("Manually defined Population Sizes (Optional)"),
+    html.P("Optionally, specify the injectables user population sizes for each year if you want to override the model's calculations."),
+    html.Button('Show/Hide Population Sizes', id='pop-size-button', n_clicks=0),
+    html.Div(id='pop-size-div', style={'display': 'none'}, children=[
+        html.Div([
+            html.Label("Year 1 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+            dcc.Input(id='pop-sizes-year-1', type='text', placeholder='e.g., 450000, 1600000, 50000')
+        ], className='input-group'),
+        html.Div([
+            html.Label("Year 2 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+            dcc.Input(id='pop-sizes-year-2', type='text', placeholder='e.g., 400000, 1500000, 100000')
+        ], className='input-group'),
+        html.Div([
+            html.Label("Year 3 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+            dcc.Input(id='pop-sizes-year-3', type='text', placeholder='e.g., 350000, 1400000, 150000')
+        ], className='input-group'),
+        html.Div([
+            html.Label("Year 4 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+            dcc.Input(id='pop-sizes-year-4', type='text', placeholder='e.g., 300000, 1300000, 200000')
+        ], className='input-group'),
+    ])
         ], className='container'),
         
         html.Div([
-            html.H3("Color Palette Picker"),
+            html.H3("Color Palette Picker (Optional)"),
             html.P("Select the colors for the different categories in the graph."),
             html.Button('Show/Hide Color Pickers', id='color-picker-button', n_clicks=0),
             html.Div(id='color-picker-div', style={'display': 'none'}, children=[
@@ -270,6 +271,20 @@ def convert(n_source, n_sink, Conv):
     n_source -= efflux
     n_sink += efflux
     return n_source, n_sink
+
+# Add this callback function
+@app.callback(
+    Output('pop-size-div', 'style'),
+    Input('pop-size-button', 'n_clicks'),
+    State('pop-size-div', 'style')
+)
+def toggle_pop_size(n_clicks, style):
+    if n_clicks % 2 == 1:
+        return {'display': 'block'}
+    else:
+        return {'display': 'none'}
+
+
 @app.callback(
     Output('color-picker-div', 'style'),
     Input('color-picker-button', 'n_clicks'),
