@@ -88,142 +88,201 @@ app.index_string = '''
 
 app.layout = html.Div([
     html.Div([
-        html.H1("Scenario 3: Change in costs over 4 years from IM and NETEN to SC"),
+        html.H1("Budget impact analysis of DMPA-SC introduction in South Africa over 4 years"),
         
         html.Div([
-            html.Div([
-                html.H3("Annual Costs per User"),
-                html.Div([
-                    html.Div([
-                        html.Label("NETEN Visit Cost"),
-                        dcc.Input(id='neten-visit-cost', type='number', value=1974)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("NETEN Product Cost"),
-                        dcc.Input(id='neten-product-cost', type='number', value=24)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("DMPIM Visit Cost"),
-                        dcc.Input(id='dmpim-visit-cost', type='number', value=1316)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("DMPIM Product Cost"),
-                        dcc.Input(id='dmpim-product-cost', type='number', value=16)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("DMPSC Visit Cost"),
-                        dcc.Input(id='dmpsc-visit-cost', type='number', value=658)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("DMPSC Product Cost"),
-                        dcc.Input(id='dmpsc-product-cost', type='number', value=116)
-                    ], className='input-group'),
-                ])
-            ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'top'}),
-
-            html.Div([
-                html.H3("Conversion Rates (%)"),
-                html.Div([
-                    html.Div([
-                        html.Label("Year 1"),
-                        dcc.Input(id='conv-rate-1', type='number', value=25)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("Year 2"),
-                        dcc.Input(id='conv-rate-2', type='number', value=35)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("Year 3"),
-                        dcc.Input(id='conv-rate-3', type='number', value=40)
-                    ], className='input-group'),
-                    html.Div([
-                        html.Label("Year 4"),
-                        dcc.Input(id='conv-rate-4', type='number', value=45)
-                    ], className='input-group'),
-                ])
-            ], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'top'}),
-        ], className='input-container'),
-        html.Div([
+            html.P("This model evaluates the efficiency gains of introducing DMPA-SC for self injection resulting from transitioning users from DMPA-IM and NET-EN to DMPA-SC over a period of 4 years. "
+                   "Input initial injectables user population sizes, annual method specific visit costs, annual method specific product costs, and yearly conversion rates. The model assumes linear progression and does not account for external factors."),
             html.H3("Starting Population Sizes"),
             html.Div([
                 html.Div([
-                    html.Label("NETEN Starting Population"),
+                    html.Label("NET-EN Starting Population"),
                     dcc.Input(id='neten-start-pop', type='number', value=500000)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("DMPIM Starting Population"),
+                    html.Label("DMPA-IM Starting Population"),
                     dcc.Input(id='dmpim-start-pop', type='number', value=1700000)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("DMPSC Starting Population"),
+                    html.Label("DMPA-SC Starting Population"),
                     dcc.Input(id='dmpsc-start-pop', type='number', value=0)
                 ], className='input-group'),
-            ])
-        ]),
-
+            ]),
+        ], className='container'),
+        
         html.Div([
-            html.H3("Override Population Sizes at Year Timepoints"),
+            html.H3("Annual Costs per User"),
+            html.P("Specify the annual method specific costs per user for each type of intervention."),
             html.Div([
-                html.Label("Year"),
-                dcc.Input(id='override-year', type='number', value=1)
-            ], className='input-group'),
+                html.Div([
+                    html.Label("NET-EN Visit Cost"),
+                    dcc.Input(id='neten-visit-cost', type='number', value=1974)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("NET-EN Product Cost"),
+                    dcc.Input(id='neten-product-cost', type='number', value=24)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPA-IM Visit Cost"),
+                    dcc.Input(id='dmpim-visit-cost', type='number', value=1316)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPA-IM Product Cost"),
+                    dcc.Input(id='dmpim-product-cost', type='number', value=16)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPA-SC Visit Cost"),
+                    dcc.Input(id='dmpsc-visit-cost', type='number', value=658)
+                ], className='input-group'),
+                html.Div([
+                    html.Label("DMPA-SC Product Cost"),
+                    dcc.Input(id='dmpsc-product-cost', type='number', value=116)
+                ], className='input-group'),
+            ])
+        ], className='container'),
+        
+        html.Div([
+            html.H3("Conversion Rates"),
+            html.P("Specify the conversion rates from DMPA-IM and NET-EN to DMPA-SC for each year."),
             html.Div([
-                html.Label("NETEN Population"),
-                dcc.Input(id='override-neten-pop', type='number')
-            ], className='input-group'),
+                html.H4("DMPA-IM to DMPA-SC Conversion Rates (%)"),
+                html.Div([
+                    html.Div([
+                        html.Label("Year 1"),
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=25)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 2"),
+                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=35)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 3"),
+                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=40)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 4"),
+                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=45)
+                    ], className='input-group'),
+                ])
+            ]),
             html.Div([
-                html.Label("DMPIM Population"),
-                dcc.Input(id='override-dmpim-pop', type='number')
-            ], className='input-group'),
+                html.H4("NET-EN to DMPA-SC Conversion Rates (%)"),
+                html.Div([
+                    html.Div([
+                        html.Label("Year 1"),
+                        dcc.Input(id='neten-conv-rate-1', type='number', value=16)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 2"),
+                        dcc.Input(id='neten-conv-rate-2', type='number', value=35)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 3"),
+                        dcc.Input(id='neten-conv-rate-3', type='number', value=50)
+                    ], className='input-group'),
+                    html.Div([
+                        html.Label("Year 4"),
+                        dcc.Input(id='neten-conv-rate-4', type='number', value=65)
+                    ], className='input-group'),
+                ])
+            ])
+        ], className='container'),
+        
+        html.Div([
+            html.H3("Manually defined Population Sizes (Optional)"),
+            html.P("Optionally, specify the injectables user population sizes for each year if you want to override the model's calculations."),
             html.Div([
-                html.Label("DMPSC Population"),
-                dcc.Input(id='override-dmpsc-pop', type='number')
-            ], className='input-group'),
-        ]),
-
+                html.Div([
+                    html.Label("Year 1 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-1', type='text', placeholder='e.g., 450000, 1600000, 50000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 2 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-2', type='text', placeholder='e.g., 400000, 1500000, 100000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 3 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-3', type='text', placeholder='e.g., 350000, 1400000, 150000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 4 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-4', type='text', placeholder='e.g., 300000, 1300000, 200000')
+                ], className='input-group'),
+            ])
+        ], className='container'),
+        
         html.Button('Update Plot', id='submit-button', n_clicks=0),
         
         dcc.Graph(id='stacked-bar-plot')
     ], className='container')
 ])
 
+def parse_pop_sizes(pop_sizes_str):
+    if pop_sizes_str:
+        try:
+            return [int(x.strip()) for x in pop_sizes_str.split(',')]
+        except ValueError:
+            return None
+    return None
 
 def convert(n_source, n_sink, Conv):
     efflux = n_source * Conv
-    n_source = n_source - efflux
-    n_sink = n_sink + efflux
+    n_source -= efflux
+    n_sink += efflux
     return n_source, n_sink
 
 @app.callback(
     Output('stacked-bar-plot', 'figure'),
     [Input('submit-button', 'n_clicks')],
-    [State('neten-visit-cost', 'value'),
+    [State('neten-start-pop', 'value'),
+     State('dmpim-start-pop', 'value'),
+     State('dmpsc-start-pop', 'value'),
+     State('neten-visit-cost', 'value'),
      State('neten-product-cost', 'value'),
      State('dmpim-visit-cost', 'value'),
      State('dmpim-product-cost', 'value'),
      State('dmpsc-visit-cost', 'value'),
      State('dmpsc-product-cost', 'value'),
-     State('conv-rate-1', 'value'),
-     State('conv-rate-2', 'value'),
-     State('conv-rate-3', 'value'),
-     State('conv-rate-4', 'value')]
+     State('dmpim-conv-rate-1', 'value'),
+     State('dmpim-conv-rate-2', 'value'),
+     State('dmpim-conv-rate-3', 'value'),
+     State('dmpim-conv-rate-4', 'value'),
+     State('neten-conv-rate-1', 'value'),
+     State('neten-conv-rate-2', 'value'),
+     State('neten-conv-rate-3', 'value'),
+     State('neten-conv-rate-4', 'value'),
+     State('pop-sizes-year-1', 'value'),
+     State('pop-sizes-year-2', 'value'),
+     State('pop-sizes-year-3', 'value'),
+     State('pop-sizes-year-4', 'value')]
 )
-def update_graph(n_clicks, neten_visit_cost, neten_product_cost, 
+def update_graph(n_clicks, neten_start_pop, dmpim_start_pop, dmpsc_start_pop, 
+                 neten_visit_cost, neten_product_cost, 
                  dmpim_visit_cost, dmpim_product_cost, 
                  dmpsc_visit_cost, dmpsc_product_cost, 
-                 *conv_rates):
+                 dmpim_conv_rate_1, dmpim_conv_rate_2, dmpim_conv_rate_3, dmpim_conv_rate_4, 
+                 neten_conv_rate_1, neten_conv_rate_2, neten_conv_rate_3, neten_conv_rate_4, 
+                 pop_sizes_year_1, pop_sizes_year_2, pop_sizes_year_3, pop_sizes_year_4):
     
-    # Hardcoded initial user numbers
-    n_neten, n_dmpim, n_dmpsc = 500000, 1700000, 0
+    dmpim_conv_rates = [dmpim_conv_rate_1, dmpim_conv_rate_2, dmpim_conv_rate_3, dmpim_conv_rate_4]
+    neten_conv_rates = [neten_conv_rate_1, neten_conv_rate_2, neten_conv_rate_3, neten_conv_rate_4]
+    user_pop_sizes = [parse_pop_sizes(pop_sizes_year_1), parse_pop_sizes(pop_sizes_year_2), 
+                      parse_pop_sizes(pop_sizes_year_3), parse_pop_sizes(pop_sizes_year_4)]
     
-    Conv_slow = [rate/100 for rate in conv_rates]
+    n_neten, n_dmpim, n_dmpsc = neten_start_pop, dmpim_start_pop, dmpsc_start_pop
+    
+    dmpim_Conv = [rate / 100 for rate in dmpim_conv_rates]
+    neten_Conv = [rate / 100 for rate in neten_conv_rates]
     years = 4
 
     dmpim, dmpsc, neten = [n_dmpim], [n_dmpsc], [n_neten]
 
     for i in range(years):
-        n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, Conv_slow[i])
-        n_neten, n_dmpsc = convert(n_neten, n_dmpsc, Conv_slow[i])
+        if user_pop_sizes[i] is not None:
+            n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
+        else:
+            n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
+            n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
         
         dmpim.append(n_dmpim)
         neten.append(n_neten)
@@ -250,7 +309,7 @@ def update_graph(n_clicks, neten_visit_cost, neten_product_cost,
         'DMPIM Visit': dmpim_visit_costs,
         'DMPSC Product': dmpsc_product_costs,
         'DMPSC Visit': dmpsc_visit_costs,
-        'Cost saving': np.abs(baseline_diff)
+        'Efficiency gain': np.abs(baseline_diff)
     })
     
     # Divide all costs by 1 billion
@@ -258,28 +317,30 @@ def update_graph(n_clicks, neten_visit_cost, neten_product_cost,
         df[column] = df[column] / 1e9
 
     colors = {
-        'NETEN': 'orange',
-        'DMPIM': 'blue',
-        'DMPSC': 'green',
-        'Cost saving': 'grey'
+        'NETEN': '#58508d',
+        'DMPIM': '#003f5c',
+        'DMPSC': '#ef5675',
+        'Efficiency gain': '#ffa600'
     }
 
     fig = go.Figure()
 
+    x_labels = ['Baseline<br>(Years 1-4)', 'Intervention<br>Year 1', 'Intervention<br>Year 2', 'Intervention<br>Year 3', 'Intervention<br>Year 4']
+
     for column in df.columns:
         if 'Visit' in column:
-            fig.add_trace(go.Bar(x=['Baseline', 'Year 1', 'Year 2', 'Year 3', 'Year 4'], y=df[column], name=column, 
+            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
                                  marker_color=colors[column.split()[0]], opacity=1))
         elif 'Product' in column:
-            fig.add_trace(go.Bar(x=['Baseline', 'Year 1', 'Year 2', 'Year 3', 'Year 4'], y=df[column], name=column, 
+            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
                                  marker_color=colors[column.split()[0]], opacity=0.5))
-        else:  # Cost saving
-            fig.add_trace(go.Bar(x=['Baseline', 'Year 1', 'Year 2', 'Year 3', 'Year 4'], y=df[column], name=column, 
+        else:  # Efficiency gain
+            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
                                  marker_color=colors[column], opacity=0.5))
 
     fig.update_layout(
         barmode='stack',
-        title=f'Scenario 3: change in costs over 4 years from IM and NETEN to SC (slow uptake: {", ".join([f"{rate}%" for rate in conv_rates])})',
+        title=f'Budget impact analysis of DMPA-SC introduction in South Africa over 4 years',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
