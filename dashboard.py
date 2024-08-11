@@ -150,19 +150,19 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=25)
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
-                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=35)
+                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=15)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 3"),
-                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=40)
+                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=20)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 4"),
-                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=45)
+                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=25)
                     ], className='input-group'),
                 ])
             ]),
@@ -171,7 +171,7 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='neten-conv-rate-1', type='number', value=16)
+                        dcc.Input(id='neten-conv-rate-1', type='number', value=25)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
