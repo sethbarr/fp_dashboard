@@ -121,7 +121,7 @@ app.layout = html.Div([
                 ], className='input-group'),
                 html.Div([
                     html.Label("NET-EN Product Cost"),
-                    dcc.Input(id='neten-product-cost', type='number', value=24)
+                    dcc.Input(id='neten-product-cost', type='number', value=144)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-IM Visit Cost"),
@@ -129,7 +129,7 @@ app.layout = html.Div([
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-IM Product Cost"),
-                    dcc.Input(id='dmpim-product-cost', type='number', value=16)
+                    dcc.Input(id='dmpim-product-cost', type='number', value=63)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-SC Visit Cost"),
