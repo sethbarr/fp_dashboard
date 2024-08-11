@@ -3,3 +3,4 @@ plotly
 pandas
 numpy
 gunicorn
+dash_daq
