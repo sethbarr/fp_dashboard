@@ -89,7 +89,7 @@ app.index_string = '''
 
 app.layout = html.Div([
     html.Div([
-        html.H1("Budget impact analysis of DMPA-SC introduction in South Africa over 4 years"),
+        html.H1("Budget Impact Analysis of DMPA-SC Introduction in South Africa Over 4 Years"),
         
         html.Div([
             html.P("This model evaluates the efficiency gains of introducing DMPA-SC for self injection resulting from transitioning users from DMPA-IM and NET-EN to DMPA-SC over a period of 4 years. "
