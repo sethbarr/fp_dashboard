@@ -112,7 +112,7 @@ app.layout = html.Div([
         ], className='container'),
         
         html.Div([
-            html.H3("Annual Costs per User"),
+            html.H3("Annual Costs per User (Rand)"),
             html.P("Specify the annual method specific costs per user for each type of intervention."),
             html.Div([
                 html.Div([
@@ -434,6 +434,10 @@ def update_graph(submit_n_clicks, export_n_clicks,
     })
     
     df_combined = pd.merge(df_users, df_costs, on='Year')
+    
+    # add a column that combines NET-EN and DMPA-IM for visit, and for product
+    df_combined['NET-EN Visit + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
+    df_combined['NET-EN Product + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
 
 
     csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
