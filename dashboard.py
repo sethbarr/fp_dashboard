@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html
+from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
@@ -190,27 +190,27 @@ app.layout = html.Div([
         ], className='container'),
         
         html.Div([
-    html.H3("Manually defined Population Sizes (Optional)"),
-    html.P("Optionally, specify the injectables user population sizes for each year if you want to override the model's calculations."),
-    html.Button('Show/Hide Population Sizes', id='pop-size-button', n_clicks=0),
-    html.Div(id='pop-size-div', style={'display': 'none'}, children=[
-        html.Div([
-            html.Label("Year 1 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-            dcc.Input(id='pop-sizes-year-1', type='text', placeholder='e.g., 450000, 1600000, 50000')
-        ], className='input-group'),
-        html.Div([
-            html.Label("Year 2 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-            dcc.Input(id='pop-sizes-year-2', type='text', placeholder='e.g., 400000, 1500000, 100000')
-        ], className='input-group'),
-        html.Div([
-            html.Label("Year 3 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-            dcc.Input(id='pop-sizes-year-3', type='text', placeholder='e.g., 350000, 1400000, 150000')
-        ], className='input-group'),
-        html.Div([
-            html.Label("Year 4 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
-            dcc.Input(id='pop-sizes-year-4', type='text', placeholder='e.g., 300000, 1300000, 200000')
-        ], className='input-group'),
-    ])
+            html.H3("Manually Defined Population Sizes (Optional)"),
+            html.P("Optionally, specify the injectables user population sizes for each year if you want to override the model's calculations."),
+            html.Button('Show/Hide Population Sizes', id='pop-size-button', n_clicks=0),
+            html.Div(id='pop-size-div', style={'display': 'none'}, children=[
+                html.Div([
+                    html.Label("Year 1 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-1', type='text', placeholder='e.g., 450000, 1600000, 50000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 2 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-2', type='text', placeholder='e.g., 400000, 1500000, 100000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 3 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-3', type='text', placeholder='e.g., 350000, 1400000, 150000')
+                ], className='input-group'),
+                html.Div([
+                    html.Label("Year 4 Population Sizes (NET-EN, DMPA-IM, DMPA-SC)"),
+                    dcc.Input(id='pop-sizes-year-4', type='text', placeholder='e.g., 300000, 1300000, 200000')
+                ], className='input-group'),
+            ])
         ], className='container'),
         
         html.Div([
@@ -254,7 +254,17 @@ app.layout = html.Div([
 
         dcc.Download(id="download-dataframe-csv"),
 
-        dcc.Graph(id='stacked-bar-plot')
+        dcc.Graph(id='stacked-bar-plot'),
+
+        html.H3("Combined Data"),
+        dash_table.DataTable(
+            id='combined-data-table',
+            columns=[],
+            data=[],
+            style_table={'overflowX': 'auto'},
+            style_cell={'textAlign': 'left', 'padding': '5px'},
+            style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'}
+        )
     ], className='container')
 ])
 
@@ -271,7 +281,6 @@ def convert(n_source, n_sink, Conv):
     n_source -= efflux
     n_sink += efflux
     return n_source, n_sink
-
 
 # Add this callback function
 @app.callback(
@@ -300,7 +309,9 @@ def toggle_color_picker(n_clicks, style):
 
 @app.callback(
     [Output('stacked-bar-plot', 'figure'),
-     Output('download-dataframe-csv', 'data')],
+     Output('download-dataframe-csv', 'data'),
+     Output('combined-data-table', 'data'),
+     Output('combined-data-table', 'columns')],
     [Input('submit-button', 'n_clicks'),
      Input('export-button', 'n_clicks')],
     [State('neten-start-pop', 'value'),
@@ -360,22 +371,25 @@ def update_graph(submit_n_clicks, export_n_clicks,
     years = 4
 
     dmpim, dmpsc, neten = [n_dmpim], [n_dmpsc], [n_neten]
-
-    #  hard code neten population sizes since they vary by year
+    # hard code neten population sizes since they vary by year
     manual_neten_pop_sizes = [552108, 557630, 563206, 568838]
+    total_users = [tot_start_pop]
+
     for i in range(years):
         if user_pop_sizes[i] is not None:
             n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
         else:
             n_dmpim = int(dmpim_start_pop * (1-dmpim_Conv[i])) # convert to dmpsc but always keep original population size
-            n_neten = int(neten_start_pop * (1-neten_Conv[i]))
+            n_neten = int(manual_neten_pop_sizes[i] * (1-neten_Conv[i]))
             n_dmpsc = int(dmpim_start_pop * (dmpim_Conv[i]))+int(neten_start_pop * (neten_Conv[i]))
-            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i]) 
-            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i]) 
+            
+            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
+            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
         
         dmpim.append(n_dmpim)
         neten.append(n_neten)
         dmpsc.append(n_dmpsc)
+        total_users.append(n_neten + n_dmpim + n_dmpsc)
 
     dmpim_visit_costs = [d * dmpim_visit_cost for d in dmpim]
     dmpsc_visit_costs = [d * dmpsc_visit_cost for d in dmpsc]
@@ -403,9 +417,10 @@ def update_graph(submit_n_clicks, export_n_clicks,
     
     df_users = pd.DataFrame({
         'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
-        'NET-EN': neten,
-        'DMPA-IM': dmpim,
-        'DMPA-SC': dmpsc,
+        'Total Users': total_users, 
+        'NET-EN Users': neten,
+        'DMPA-IM Users': dmpim,
+        'DMPA-SC Users': dmpsc
     })
 
     # Divide all costs by 1 billion
@@ -437,7 +452,7 @@ def update_graph(submit_n_clicks, export_n_clicks,
 
     fig.update_layout(
         barmode='stack',
-        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
+        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
@@ -447,6 +462,7 @@ def update_graph(submit_n_clicks, export_n_clicks,
 # make output df for csv
     df_users = pd.DataFrame({
         'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
+        'Total Users': total_users,
         'NET-EN Users': neten,
         'DMPA-IM Users': dmpim,
         'DMPA-SC Users': dmpsc,
@@ -465,19 +481,14 @@ def update_graph(submit_n_clicks, export_n_clicks,
     
     df_combined = pd.merge(df_users, df_costs, on='Year')
     
-    
     # add a column that combines NET-EN and DMPA-IM for visit, and for product
-    df_combined['NET-EN Visit + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
-    df_combined['NET-EN Product + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
+    df_combined['NET-EN + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
+    df_combined['NET-EN + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
     
-    # move 'Efficiency gain' to the end
-    df_combined = df_combined[['Year', 'NET-EN + DMPA-IM Users', 'NET-EN Users', 'DMPA-IM Users', 'DMPA-SC Users', 'NET-EN Visit + DMPA-IM Visit','NET-EN Visit', 'DMPA-IM Visit', 'DMPA-SC Visit','NET-EN Product + DMPA-IM Product', 'NET-EN Product', 'DMPA-IM Product',  'DMPA-SC Product',  'Efficiency gain']]
+    df_combined = df_combined[['Year', 'Total Users', 'NET-EN + DMPA-IM Users', 'NET-EN Users', 'DMPA-IM Users', 'DMPA-SC Users', 'NET-EN + DMPA-IM Visit','NET-EN Visit', 'DMPA-IM Visit', 'DMPA-SC Visit','NET-EN + DMPA-IM Product', 'NET-EN Product', 'DMPA-IM Product',  'DMPA-SC Product',  'Efficiency gain']]
     
-    
-    # # add a baseline row
-    # NET-EN + DMPA-IM Users	NET-EN Users	DMPA-IM Users	DMPA-SC Users	NET-EN Visit + DMPA-IM Visit	NET-EN Visit	DMPA-IM Visit	DMPA-SC Visit	NET-EN Product + DMPA-IM Product	NET-EN Product	DMPA-IM Product	DMPA-SC Product	Efficiency gain
-
     baseline_row = ['Baseline (Years 1-4)', 
+                           tot_start_pop,
                            neten_start_pop + dmpim_start_pop, 
                            neten_start_pop, 
                            dmpim_start_pop, 
@@ -490,9 +501,11 @@ def update_graph(submit_n_clicks, export_n_clicks,
                            neten_start_pop * neten_product_cost, 
                            dmpim_start_pop * dmpim_product_cost, 
                            dmpsc_start_pop * dmpsc_product_cost, 
-                           0] # 0 for efficiency gain
+                           0]  # 0 for efficiency gain
 
     df_combined = pd.concat([pd.DataFrame([baseline_row], columns=df_combined.columns), df_combined], ignore_index=True)
+
+
     csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
     
     # csv_data_user = dcc.send_data_frame(df_users.to_csv, "user_population.csv", index=False)
@@ -500,10 +513,13 @@ def update_graph(submit_n_clicks, export_n_clicks,
     # csv_data_cost = dcc.send_data_frame(df_costs.to_csv, "costs.csv", index=False)
 
 # not exporting individually, not producing baseline values. TO FIX
+    table_columns = [{"name": i, "id": i} for i in df_combined.columns]
+    table_data = df_combined.to_dict('records')
+
     if export_n_clicks > 0:
-        return fig, csv_data #, csv_data_user, csv_data_cost
+        return fig, csv_data, table_data, table_columns
     else:
-        return fig, None
+        return fig, None, table_data, table_columns
 
 if __name__ == '__main__':
     app.run_server(debug=True)
