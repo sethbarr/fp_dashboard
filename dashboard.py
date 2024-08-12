@@ -150,19 +150,19 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10)
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.6)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
-                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=15)
+                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=35)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 3"),
-                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=20)
+                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=50)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 4"),
-                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=25)
+                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=65)
                     ], className='input-group'),
                 ])
             ]),
@@ -267,7 +267,7 @@ def parse_pop_sizes(pop_sizes_str):
     return None
 
 def convert(n_source, n_sink, Conv):
-    efflux = n_source * Conv
+    efflux = int(n_source * Conv)
     n_source -= efflux
     n_sink += efflux
     return n_source, n_sink
@@ -350,6 +350,8 @@ def update_graph(submit_n_clicks, export_n_clicks,
                       parse_pop_sizes(pop_sizes_year_3), parse_pop_sizes(pop_sizes_year_4)]
     
     n_neten, n_dmpim, n_dmpsc = neten_start_pop, dmpim_start_pop, dmpsc_start_pop
+
+    tot_start_pop = n_neten + n_dmpim + n_dmpsc
     
     # convert pct to proportion
     dmpim_Conv = [rate / 100 for rate in dmpim_conv_rates]
@@ -437,6 +439,13 @@ def update_graph(submit_n_clicks, export_n_clicks,
     )
 
 # make output df for csv
+    df_users = pd.DataFrame({
+        'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
+        'NET-EN Users': neten,
+        'DMPA-IM Users': dmpim,
+        'DMPA-SC Users': dmpsc,
+        'NET-EN + DMPA-IM Users': [sum(x) for x in zip(neten, dmpim)],
+        })
     df_costs = pd.DataFrame({
         'Year': ['Baseline (Years 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
         'NET-EN Product': neten_product_costs,
@@ -446,19 +455,27 @@ def update_graph(submit_n_clicks, export_n_clicks,
         'DMPA-SC Product': dmpsc_product_costs,
         'DMPA-SC Visit': dmpsc_visit_costs,
         'Efficiency gain': np.abs(baseline_diff)
-    })
+        })
     
     df_combined = pd.merge(df_users, df_costs, on='Year')
     
     # add a column that combines NET-EN and DMPA-IM for visit, and for product
     df_combined['NET-EN Visit + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
     df_combined['NET-EN Product + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
+    
+    # # add a baseline row
+    # df_combined.loc[-1] = ['Baseline (Years 1-4)', neten[0], dmpim[0], dmpsc[0], neten[0] + dmpim[0], neten_visit_costs[0], dmpim_visit_costs[0], neten_product_costs[0], dmpim_product_costs[0], neten[0] + dmpim[0], neten_product_costs[0] + dmpim_product_costs[0]]
 
 
     csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
+    
+    # csv_data_user = dcc.send_data_frame(df_users.to_csv, "user_population.csv", index=False)
 
+    # csv_data_cost = dcc.send_data_frame(df_costs.to_csv, "costs.csv", index=False)
+
+# not exporting individually, not producing baseline values. TO FIX
     if export_n_clicks > 0:
-        return fig, csv_data
+        return fig, csv_data #, csv_data_user, csv_data_cost
     else:
         return fig, None
 
