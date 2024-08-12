@@ -4,3 +4,4 @@ pandas
 numpy
 gunicorn
 dash_daq
+dash_bootstrap_components
