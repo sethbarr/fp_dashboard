@@ -435,7 +435,7 @@ def update_graph(submit_n_clicks, export_n_clicks,
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
-        legend=dict(x=1.05, y=1, bordercolor="Black", borderwidth=2)
+        legend=dict(x=1.05, y=1)
     )
 
 # make output df for csv
