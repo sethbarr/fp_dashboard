@@ -1,6 +1,6 @@
 # Budget Impact Analysis of DMPA-SC Introduction in South Africa Over 4 Years
 
-This models the budget impact of introducing DMPA-SC in South Africa over 4 years and tracks the cost and efficiency gain for users transitioning from DMPA-IM and NET-EN to the longer acting self injectable DMPSA-SC. The product costs are hypothetical and are solely for exploratory purposes. The model is hosted on OnRender and can be accessed [here](https://fp-dashboard.onrender.com/).
+This models the budget impact of introducing DMPA-SC in South Africa over 4 years and tracks the cost and efficiency gain for users transitioning from DMPA-IM and NET-EN to the longer acting self injectable DMPSA-SC. The product costs are hypothetical and are solely for exploratory purposes. The [model](https://github.com/sethbarr/fp_dashboard/blob/main/dashboard.py) is hosted on OnRender and can be accessed [here](https://fp-dashboard.onrender.com/).
 
 The following elements can be manipulated to explore possible outcomes:
 1. The initial number of users of DMPA-IM, NET-EN, and DMPA-SC at baseline (Default values are 1,701,061, 552,108, and 0 respectively).
@@ -17,4 +17,4 @@ The model is based on the following assumptions:
 2. Family planning product users are able to change from DMPA-IM and NET-EN to DMPA-SC but not _vice versa_.
 3. The percent of users converting from DMPA-IM and NET-EN to DMPA-SC is specified as a percent, but the model does not produce fractional people. All floating point numbers are converted to integers.
 4. The percent conversion rate is applied to the total number of users of DMPA-IM and NET-EN in the baseline year, not necessarily the year before.
-   1. The model that does automatically apply the conversion rate to the number of users in the previous year is probably more generalizable, and is available in an earlier form (without some features as `dashboard_dynamic.py`).
+   1. The model that does automatically apply the conversion rate to the number of users in the previous year is probably more generalizable, and is available in an earlier form (without some features as [`dashboard_dynamic.py`](https://github.com/sethbarr/fp_dashboard/blob/main/dashboard_dynamic.py)).
