@@ -93,7 +93,7 @@ app.layout = html.Div([
         
         html.Div([
             html.P("This model evaluates the efficiency gains of introducing DMPA-SC for self injection resulting from transitioning users from DMPA-IM and NET-EN to DMPA-SC over a period of 4 years. "
-                   "Input initial injectables user population sizes, annual method specific visit costs, annual method specific product costs, and yearly conversion rates. The model assumes linear progression and does not account for external factors."),
+                   "Input initial injectables user population sizes, annual method specific visit costs, annual method specific product costs, and yearly conversion rates. The model uses hypothetical product costs and is for exploratory purposes only."),
             html.H3("Starting Population Sizes"),
             html.Div([
                 html.Div([
