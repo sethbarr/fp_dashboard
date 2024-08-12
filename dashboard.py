@@ -98,11 +98,11 @@ app.layout = html.Div([
             html.Div([
                 html.Div([
                     html.Label("NET-EN Starting Population"),
-                    dcc.Input(id='neten-start-pop', type='number', value=500000)
+                    dcc.Input(id='neten-start-pop', type='number', value=552108)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-IM Starting Population"),
-                    dcc.Input(id='dmpim-start-pop', type='number', value=1700000)
+                    dcc.Input(id='dmpim-start-pop', type='number', value=1701061)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-SC Starting Population"),
@@ -150,7 +150,7 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.6)
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.8417599)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
@@ -272,6 +272,7 @@ def convert(n_source, n_sink, Conv):
     n_sink += efflux
     return n_source, n_sink
 
+
 # Add this callback function
 @app.callback(
     Output('pop-size-div', 'style'),
@@ -360,12 +361,17 @@ def update_graph(submit_n_clicks, export_n_clicks,
 
     dmpim, dmpsc, neten = [n_dmpim], [n_dmpsc], [n_neten]
 
+    #  hard code neten population sizes since they vary by year
+    manual_neten_pop_sizes = [552108, 557630, 563206, 568838]
     for i in range(years):
         if user_pop_sizes[i] is not None:
             n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
         else:
-            n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
-            n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
+            n_dmpim = int(dmpim_start_pop * (1-dmpim_Conv[i])) # convert to dmpsc but always keep original population size
+            n_neten = int(neten_start_pop * (1-neten_Conv[i]))
+            n_dmpsc = int(dmpim_start_pop * (dmpim_Conv[i]))+int(neten_start_pop * (neten_Conv[i]))
+            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i]) 
+            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i]) 
         
         dmpim.append(n_dmpim)
         neten.append(n_neten)
@@ -431,7 +437,7 @@ def update_graph(submit_n_clicks, export_n_clicks,
 
     fig.update_layout(
         barmode='stack',
-        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
+        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
@@ -459,14 +465,34 @@ def update_graph(submit_n_clicks, export_n_clicks,
     
     df_combined = pd.merge(df_users, df_costs, on='Year')
     
+    
     # add a column that combines NET-EN and DMPA-IM for visit, and for product
     df_combined['NET-EN Visit + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
     df_combined['NET-EN Product + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
     
+    # move 'Efficiency gain' to the end
+    df_combined = df_combined[['Year', 'NET-EN + DMPA-IM Users', 'NET-EN Users', 'DMPA-IM Users', 'DMPA-SC Users', 'NET-EN Visit + DMPA-IM Visit','NET-EN Visit', 'DMPA-IM Visit', 'DMPA-SC Visit','NET-EN Product + DMPA-IM Product', 'NET-EN Product', 'DMPA-IM Product',  'DMPA-SC Product',  'Efficiency gain']]
+    
+    
     # # add a baseline row
-    # df_combined.loc[-1] = ['Baseline (Years 1-4)', neten[0], dmpim[0], dmpsc[0], neten[0] + dmpim[0], neten_visit_costs[0], dmpim_visit_costs[0], neten_product_costs[0], dmpim_product_costs[0], neten[0] + dmpim[0], neten_product_costs[0] + dmpim_product_costs[0]]
+    # NET-EN + DMPA-IM Users	NET-EN Users	DMPA-IM Users	DMPA-SC Users	NET-EN Visit + DMPA-IM Visit	NET-EN Visit	DMPA-IM Visit	DMPA-SC Visit	NET-EN Product + DMPA-IM Product	NET-EN Product	DMPA-IM Product	DMPA-SC Product	Efficiency gain
 
+    baseline_row = ['Baseline (Years 1-4)', 
+                           neten_start_pop + dmpim_start_pop, 
+                           neten_start_pop, 
+                           dmpim_start_pop, 
+                           dmpsc_start_pop, 
+                           neten_start_pop * neten_visit_cost + dmpim_start_pop * dmpim_visit_cost, 
+                           neten_start_pop * neten_visit_cost,
+                           dmpim_start_pop * dmpim_visit_cost, 
+                           dmpsc_start_pop * dmpsc_visit_cost, 
+                           neten_start_pop * neten_product_cost + dmpim_start_pop * dmpim_product_cost, 
+                           neten_start_pop * neten_product_cost, 
+                           dmpim_start_pop * dmpim_product_cost, 
+                           dmpsc_start_pop * dmpsc_product_cost, 
+                           0] # 0 for efficiency gain
 
+    df_combined = pd.concat([pd.DataFrame([baseline_row], columns=df_combined.columns), df_combined], ignore_index=True)
     csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
     
     # csv_data_user = dcc.send_data_frame(df_users.to_csv, "user_population.csv", index=False)
