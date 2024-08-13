@@ -150,19 +150,19 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.8417599)
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
-                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=35)
+                        dcc.Input(id='dmpim-conv-rate-2', type='number', value=15)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 3"),
-                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=50)
+                        dcc.Input(id='dmpim-conv-rate-3', type='number', value=20)
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 4"),
-                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=65)
+                        dcc.Input(id='dmpim-conv-rate-4', type='number', value=25)
                     ], className='input-group'),
                 ])
             ]),
@@ -375,22 +375,32 @@ def update_graph(submit_n_clicks, export_n_clicks,
     manual_neten_pop_sizes = [552108, 557630, 563206, 568838]
     total_users = [tot_start_pop]
 
+    # for i in range(years):
+    #     if user_pop_sizes[i] is not None:
+    #         n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
+    #     else:
+    #         n_dmpim = int(dmpim_start_pop * (1-dmpim_Conv[i])) # convert to dmpsc but always keep original population size
+    #         n_neten = int(manual_neten_pop_sizes[i] * (1-neten_Conv[i]))
+    #         n_dmpsc = int(dmpim_start_pop * (dmpim_Conv[i]))+int(neten_start_pop * (neten_Conv[i]))
     for i in range(years):
-        if user_pop_sizes[i] is not None:
+        if 'user_pop_sizes' in locals() and user_pop_sizes[i] is not None:
             n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
         else:
-            n_dmpim = int(dmpim_start_pop * (1-dmpim_Conv[i])) # convert to dmpsc but always keep original population size
-            n_neten = int(manual_neten_pop_sizes[i] * (1-neten_Conv[i]))
-            n_dmpsc = int(dmpim_start_pop * (dmpim_Conv[i]))+int(neten_start_pop * (neten_Conv[i]))
+            dmpim_start_pop = dmpim[0]  # Use the initial DMPIM population
+            neten_start_pop = manual_neten_pop_sizes[i]  # Use the current year's NETEN population
             
-            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
-            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
+            n_dmpim = int(dmpim_start_pop * (1 - dmpim_Conv[i]))
+            n_neten = int(neten_start_pop * (1 - neten_Conv[i]))
+            n_dmpsc = int(dmpim_start_pop * dmpim_Conv[i]) + int(neten_start_pop * neten_Conv[i])
         
         dmpim.append(n_dmpim)
         neten.append(n_neten)
         dmpsc.append(n_dmpsc)
         total_users.append(n_neten + n_dmpim + n_dmpsc)
-
+                        
+            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
+            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
+    
     dmpim_visit_costs = [d * dmpim_visit_cost for d in dmpim]
     dmpsc_visit_costs = [d * dmpsc_visit_cost for d in dmpsc]
     neten_visit_costs = [n * neten_visit_cost for n in neten]
