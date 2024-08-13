@@ -1,11 +1,13 @@
 import dash
 from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
 import pandas as pd
-import numpy as np
 import dash_daq as daq
 
+# Import helper functions
+from dashboard_helpers import parse_pop_sizes, perform_calculations, create_plot, prepare_combined_data
+
+# Initialize the Dash app
 app = dash.Dash(__name__)
 server = app.server
 
@@ -87,6 +89,7 @@ app.index_string = '''
 </html>
 '''
 
+# App layout
 app.layout = html.Div([
     html.Div([
         html.H1("Budget Impact Analysis of DMPA-SC Introduction in South Africa Over 4 Years"),
@@ -121,7 +124,7 @@ app.layout = html.Div([
                 ], className='input-group'),
                 html.Div([
                     html.Label("NET-EN Product Cost"),
-                    dcc.Input(id='neten-product-cost', type='number', value=144)
+                    dcc.Input(id='neten-product-cost', type='number', value=143.52)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-IM Visit Cost"),
@@ -129,7 +132,7 @@ app.layout = html.Div([
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-IM Product Cost"),
-                    dcc.Input(id='dmpim-product-cost', type='number', value=63)
+                    dcc.Input(id='dmpim-product-cost', type='number', value=63.4)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-SC Visit Cost"),
@@ -150,7 +153,7 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10)
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10) #15.8417599
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
@@ -222,28 +225,28 @@ app.layout = html.Div([
                     html.Label("NETEN Color"),
                     daq.ColorPicker(
                         id='neten-color',
-                        value=dict(hex='#003f5c')  # Orange
+                        value=dict(hex='#003f5c')
                     )
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPIM Color"),
                     daq.ColorPicker(
                         id='dmpim-color',
-                        value=dict(hex='#7a5195')  # Blue
+                        value=dict(hex='#7a5195')
                     )
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPSC Color"),
                     daq.ColorPicker(
                         id='dmpsc-color',
-                        value=dict(hex='#ef5675')  # Green
+                        value=dict(hex='#ef5675')
                     )
                 ], className='input-group'),
                 html.Div([
                     html.Label("Efficiency Gain Color"),
                     daq.ColorPicker(
                         id='cost-saving-color',
-                        value=dict(hex='#ffa600')  # Grey
+                        value=dict(hex='#ffa600')
                     )
                 ], className='input-group')
             ])
@@ -268,21 +271,7 @@ app.layout = html.Div([
     ], className='container')
 ])
 
-def parse_pop_sizes(pop_sizes_str):
-    if pop_sizes_str:
-        try:
-            return [int(x.strip()) for x in pop_sizes_str.split(',')]
-        except ValueError:
-            return None
-    return None
-
-def convert(n_source, n_sink, Conv):
-    efflux = int(n_source * Conv)
-    n_source -= efflux
-    n_sink += efflux
-    return n_source, n_sink
-
-# Add this callback function
+# Callback functions
 @app.callback(
     Output('pop-size-div', 'style'),
     Input('pop-size-button', 'n_clicks'),
@@ -294,7 +283,6 @@ def toggle_pop_size(n_clicks, style):
     else:
         return {'display': 'none'}
 
-
 @app.callback(
     Output('color-picker-div', 'style'),
     Input('color-picker-button', 'n_clicks'),
@@ -305,7 +293,6 @@ def toggle_color_picker(n_clicks, style):
         return {'display': 'block'}
     else:
         return {'display': 'none'}
-
 
 @app.callback(
     [Output('stacked-bar-plot', 'figure'),
@@ -340,189 +327,47 @@ def toggle_color_picker(n_clicks, style):
      State('dmpsc-color', 'value'),
      State('cost-saving-color', 'value')]
 )
-def update_graph(submit_n_clicks, export_n_clicks, 
-                 neten_start_pop, dmpim_start_pop, 
-                 dmpsc_start_pop, 
-                 neten_visit_cost, neten_product_cost, 
-                 dmpim_visit_cost, 
-                 dmpim_product_cost, dmpsc_visit_cost, 
-                 dmpsc_product_cost,
-                 dmpim_conv_rate_1, dmpim_conv_rate_2, 
-                 dmpim_conv_rate_3, dmpim_conv_rate_4, 
-                 neten_conv_rate_1, neten_conv_rate_2, 
-                 neten_conv_rate_3, neten_conv_rate_4, 
-                 pop_sizes_year_1, pop_sizes_year_2, 
-                 pop_sizes_year_3, pop_sizes_year_4,
-                 neten_color, dmpim_color, 
-                 dmpsc_color, cost_saving_color):
-    
-    dmpim_conv_rates = [dmpim_conv_rate_1, dmpim_conv_rate_2, dmpim_conv_rate_3, dmpim_conv_rate_4]
-    neten_conv_rates = [neten_conv_rate_1, neten_conv_rate_2, neten_conv_rate_3, neten_conv_rate_4]
-    user_pop_sizes = [parse_pop_sizes(pop_sizes_year_1), parse_pop_sizes(pop_sizes_year_2), 
-                      parse_pop_sizes(pop_sizes_year_3), parse_pop_sizes(pop_sizes_year_4)]
-    
-    n_neten, n_dmpim, n_dmpsc = neten_start_pop, dmpim_start_pop, dmpsc_start_pop
-
-    tot_start_pop = n_neten + n_dmpim + n_dmpsc
-    
-    # convert pct to proportion
-    dmpim_Conv = [rate / 100 for rate in dmpim_conv_rates]
-    neten_Conv = [rate / 100 for rate in neten_conv_rates]
-    years = 4
-
-    dmpim, dmpsc, neten = [n_dmpim], [n_dmpsc], [n_neten]
-    # hard code neten population sizes since they vary by year
-    manual_neten_pop_sizes = [552108, 557630, 563206, 568838]
-    total_users = [tot_start_pop]
-
-    # for i in range(years):
-    #     if user_pop_sizes[i] is not None:
-    #         n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
-    #     else:
-    #         n_dmpim = int(dmpim_start_pop * (1-dmpim_Conv[i])) # convert to dmpsc but always keep original population size
-    #         n_neten = int(manual_neten_pop_sizes[i] * (1-neten_Conv[i]))
-    #         n_dmpsc = int(dmpim_start_pop * (dmpim_Conv[i]))+int(neten_start_pop * (neten_Conv[i]))
-    for i in range(years):
-        if 'user_pop_sizes' in locals() and user_pop_sizes[i] is not None:
-            n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
-        else:
-            dmpim_start_pop = dmpim[0]  # Use the initial DMPIM population
-            neten_start_pop = manual_neten_pop_sizes[i]  # Use the current year's NETEN population
-            
-            n_dmpim = int(dmpim_start_pop * (1 - dmpim_Conv[i]))
-            n_neten = int(neten_start_pop * (1 - neten_Conv[i]))
-            n_dmpsc = int(dmpim_start_pop * dmpim_Conv[i]) + int(neten_start_pop * neten_Conv[i])
-        
-        dmpim.append(n_dmpim)
-        neten.append(n_neten)
-        dmpsc.append(n_dmpsc)
-        total_users.append(n_neten + n_dmpim + n_dmpsc)
-                        
-            # n_dmpim, n_dmpsc = convert(n_dmpim, n_dmpsc, dmpim_Conv[i])
-            # n_neten, n_dmpsc = convert(n_neten, n_dmpsc, neten_Conv[i])
-    
-    dmpim_visit_costs = [d * dmpim_visit_cost for d in dmpim]
-    dmpsc_visit_costs = [d * dmpsc_visit_cost for d in dmpsc]
-    neten_visit_costs = [n * neten_visit_cost for n in neten]
-
-    dmpim_product_costs = [d * dmpim_product_cost for d in dmpim]
-    neten_product_costs = [n * neten_product_cost for n in neten]
-    dmpsc_product_costs = [d * dmpsc_product_cost for d in dmpsc]
-
-    baselinecost = sum(x[0] for x in [dmpim_visit_costs, dmpim_product_costs, neten_visit_costs, neten_product_costs, dmpsc_visit_costs, dmpsc_product_costs]) # adding sc costs in case there is a baseline with sc
-    tot_costs = [sum(x) for x in zip(dmpim_visit_costs, dmpim_product_costs, 
-                                     dmpsc_visit_costs, dmpsc_product_costs, 
-                                     neten_visit_costs, neten_product_costs)]
-    baseline_diff = [x - baselinecost for x in tot_costs]
-
-    df = pd.DataFrame({
-        'NET-EN Product': neten_product_costs,
-        'NET-EN Visit': neten_visit_costs,
-        'DMPA-IM Product': dmpim_product_costs,
-        'DMPA-IM Visit': dmpim_visit_costs,
-        'DMPA-SC Product': dmpsc_product_costs,
-        'DMPA-SC Visit': dmpsc_visit_costs,
-        'Efficiency gain': np.abs(baseline_diff)
-    })
-    
-    df_users = pd.DataFrame({
-        'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
-        'Total Users': total_users, 
-        'NET-EN Users': neten,
-        'DMPA-IM Users': dmpim,
-        'DMPA-SC Users': dmpsc
-    })
-
-    # Divide all costs by 1 billion
-    for column in df.columns:
-        df[column] = df[column] / 1e9
-
-    # Picker colors
-    colors = {
-        'NET-EN': neten_color['hex'],
-        'DMPA-IM': dmpim_color['hex'],
-        'DMPA-SC': dmpsc_color['hex'],
-        'Efficiency gain': cost_saving_color['hex']
+def update_graph(submit_n_clicks, export_n_clicks, *args):
+    # Prepare input data
+    inputs = {
+        'start_pops': args[:3],
+        'neten_costs': args[3:5],
+        'dmpim_costs': args[5:7],
+        'dmpsc_costs': args[7:9],
+        'dmpim_conv_rates': args[9:13],
+        'neten_conv_rates': args[13:17],
+        'user_pop_sizes': [parse_pop_sizes(pop_size) for pop_size in args[17:21]],
+        'colors': {k: v['hex'] for k, v in zip(['neten', 'dmpim', 'dmpsc', 'efficiency_gain'], args[21:])}
     }
 
-    fig = go.Figure()
+    # Perform calculations
+    results = perform_calculations(inputs)
 
-    x_labels = ['Baseline<br>(Years 1-4)', 'Intervention<br>Year 1', 'Intervention<br>Year 2', 'Intervention<br>Year 3', 'Intervention<br>Year 4']
+    # Prepare data for plotting and tables
+    df = pd.DataFrame({
+        'NET-EN Product': results['costs']['neten_product'],
+        'NET-EN Visit': results['costs']['neten_visit'],
+        'DMPA-IM Product': results['costs']['dmpim_product'],
+        'DMPA-IM Visit': results['costs']['dmpim_visit'],
+        'DMPA-SC Product': results['costs']['dmpsc_product'],
+        'DMPA-SC Visit': results['costs']['dmpsc_visit'],
+        'Total Costs': results['total_costs'],  # Add this line
+        'Efficiency gain': results['efficiency_gains']
+    })
 
-    for column in df.columns:
-        if 'Visit' in column:
-            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column.split()[0]], opacity=0.65))
-        elif 'Product' in column:
-            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column.split()[0]], opacity=1))
-        else:  # Efficiency gain
-            fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                 marker_color=colors[column], opacity=1))
+    # Convert costs to billions
+    df = df / 1e9
 
-    fig.update_layout(
-        barmode='stack',
-        title=f'Budget impact analysis of DMPA-SC for self injection introduction in South Africa over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
-        xaxis_title='Year',
-        yaxis_title='Costs in Billions of Rand',
-        yaxis=dict(tickformat=".2f"),
-        legend=dict(x=1.05, y=1)
-    )
+    # Create the plot
+    fig = create_plot(df, inputs['colors'])
 
-# make output df for csv
-    df_users = pd.DataFrame({
-        'Year': ['Baseline (Year 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
-        'Total Users': total_users,
-        'NET-EN Users': neten,
-        'DMPA-IM Users': dmpim,
-        'DMPA-SC Users': dmpsc,
-        'NET-EN + DMPA-IM Users': [sum(x) for x in zip(neten, dmpim)],
-        })
-    df_costs = pd.DataFrame({
-        'Year': ['Baseline (Years 1-4)', 'Intervention Year 1', 'Intervention Year 2', 'Intervention Year 3', 'Intervention Year 4'],
-        'NET-EN Product': neten_product_costs,
-        'NET-EN Visit': neten_visit_costs,
-        'DMPA-IM Product': dmpim_product_costs,
-        'DMPA-IM Visit': dmpim_visit_costs,
-        'DMPA-SC Product': dmpsc_product_costs,
-        'DMPA-SC Visit': dmpsc_visit_costs,
-        'Efficiency gain': np.abs(baseline_diff)
-        })
-    
-    df_combined = pd.merge(df_users, df_costs, on='Year')
-    
-    # add a column that combines NET-EN and DMPA-IM for visit, and for product
-    df_combined['NET-EN + DMPA-IM Visit'] = df_combined['NET-EN Visit'] + df_combined['DMPA-IM Visit']
-    df_combined['NET-EN + DMPA-IM Product'] = df_combined['NET-EN Product'] + df_combined['DMPA-IM Product']
-    
-    df_combined = df_combined[['Year', 'Total Users', 'NET-EN + DMPA-IM Users', 'NET-EN Users', 'DMPA-IM Users', 'DMPA-SC Users', 'NET-EN + DMPA-IM Visit','NET-EN Visit', 'DMPA-IM Visit', 'DMPA-SC Visit','NET-EN + DMPA-IM Product', 'NET-EN Product', 'DMPA-IM Product',  'DMPA-SC Product',  'Efficiency gain']]
-    
-    baseline_row = ['Baseline (Years 1-4)', 
-                           tot_start_pop,
-                           neten_start_pop + dmpim_start_pop, 
-                           neten_start_pop, 
-                           dmpim_start_pop, 
-                           dmpsc_start_pop, 
-                           neten_start_pop * neten_visit_cost + dmpim_start_pop * dmpim_visit_cost, 
-                           neten_start_pop * neten_visit_cost,
-                           dmpim_start_pop * dmpim_visit_cost, 
-                           dmpsc_start_pop * dmpsc_visit_cost, 
-                           neten_start_pop * neten_product_cost + dmpim_start_pop * dmpim_product_cost, 
-                           neten_start_pop * neten_product_cost, 
-                           dmpim_start_pop * dmpim_product_cost, 
-                           dmpsc_start_pop * dmpsc_product_cost, 
-                           0]  # 0 for efficiency gain
+    # Prepare the combined data table
+    df_combined = prepare_combined_data(results, inputs)
 
-    df_combined = pd.concat([pd.DataFrame([baseline_row], columns=df_combined.columns), df_combined], ignore_index=True)
-
-
+    # Prepare CSV data
     csv_data = dcc.send_data_frame(df_combined.to_csv, "user_population_and_costs.csv", index=False)
-    
-    # csv_data_user = dcc.send_data_frame(df_users.to_csv, "user_population.csv", index=False)
 
-    # csv_data_cost = dcc.send_data_frame(df_costs.to_csv, "costs.csv", index=False)
-
-# not exporting individually, not producing baseline values. TO FIX
+    # Prepare table data
     table_columns = [{"name": i, "id": i} for i in df_combined.columns]
     table_data = df_combined.to_dict('records')
 
