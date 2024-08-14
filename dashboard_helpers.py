@@ -202,14 +202,30 @@ def create_plot(df, colors):
                 # Use a list comprehension to create a color array based on the value
                 color_array = ['#9b2226' if val < 0 else colors.get(color_key, '#808080') for val in df[column]]
                 fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
-                                     marker_color=color_array, opacity=1))
+                                     marker_color=color_array, opacity=1, showlegend=False))
+                
+                # Add invisible scatter traces for legend entries
+                fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers',
+                                         marker=dict(size=10, color=colors.get(color_key, '#808080')),
+                                         name='Efficiency gain (Positive)', showlegend=True))
+                fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers',
+                                         marker=dict(size=10, color='#9b2226'),
+                                         name='Efficiency gain (Negative)', showlegend=True))
             else:
                 fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
                                      marker_color=colors.get(color_key, '#808080'), opacity=1))
+            # elif column == 'Efficiency gain':
+            #     # Use a list comprehension to create a color array based on the value
+            #     color_array = ['#9b2226' if val < 0 else colors.get(color_key, '#808080') for val in df[column]]
+            #     fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
+            #                          marker_color=color_array, opacity=1))
+            # else:
+            #     fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
+            #                          marker_color=colors.get(color_key, '#808080'), opacity=1))
 
     fig.update_layout(
         barmode='stack',
-        title='Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
+        title='Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC.',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
