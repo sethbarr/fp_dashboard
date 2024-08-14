@@ -139,6 +139,10 @@ app.layout = html.Div([
                     dcc.Input(id='dmpsc-visit-cost', type='number', value=658)
                 ], className='input-group'),
                 html.Div([
+                    html.Label("DMPA-SC First Visit Multiplier"),
+                    dcc.Input(id='dmpsc-first-visit-multiplier', type='number', value=2)
+                ], className='input-group'),
+                html.Div([
                     html.Label("DMPA-SC Product Cost"),
                     dcc.Input(id='dmpsc-product-cost', type='number', value=116)
                 ], className='input-group'),
@@ -153,7 +157,7 @@ app.layout = html.Div([
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10) #15.8417599
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.8417599) #15.8417599
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
