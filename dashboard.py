@@ -112,7 +112,7 @@ app.layout = html.Div([
         
         html.Div([
             html.H3("Annual Costs per User (Rand)"),
-            html.P("Specify the cost per visit (this should be the same for each intervention), the number of annual visits required for each intervention, and the annual method specific costs per user for each type of intervention. If the new intervention (DMPSA-SC) will cost more in the first year use the multiplier option (default value 2) which will increase the cost for the first year to account for a longer first visit."),
+            html.P("Specify the cost per visit (this should be the same for each intervention), the number of annual visits required for each intervention, and the annual method specific costs per user for each type of intervention. If the new intervention (DMPSA-SC) will require more intensive first visits use the multiplier option (default value 2) which will increase the cost for the first visit of the year to account for a longer first visit."),
             html.Div([
                 html.Div([
                     html.Label("Cost per Visit"),
