@@ -3,6 +3,7 @@ from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import dash_daq as daq
+from model import run_model
 
 # Import helper functions
 from dashboard_helpers import parse_pop_sizes, perform_calculations, create_plot, prepare_combined_data
@@ -355,7 +356,9 @@ def update_graph(submit_n_clicks, export_n_clicks, *args):
     }
 
     # Perform calculations
-    results = perform_calculations(inputs)
+    # results = perform_calculations(inputs)
+    results = run_model(inputs)
+
 
     # Prepare data for plotting and tables
     df = pd.DataFrame({
