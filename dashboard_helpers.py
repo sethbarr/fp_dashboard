@@ -1,5 +1,3 @@
-# dashboard_helpers.py
-
 import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
@@ -24,132 +22,91 @@ def calculate_costs(population, visit_cost, product_cost):
     """Calculate visit and product costs for a given population."""
     return population * visit_cost, population * product_cost
 
-
 def perform_calculations(inputs):
     """Perform main calculations for the dashboard."""
-    neten_start_pop, dmpim_start_pop = inputs['start_pops'] #, dmpsc_start_pop
-    visit_cost = inputs['visit_cost']
+    dmpsc_start_pop = 0
+    neten_start_pop, dmpim_start_pop = inputs['start_pops']
     neten_num_visits, neten_product_cost = inputs['neten_costs']
     dmpim_num_visits, dmpim_product_cost = inputs['dmpim_costs']
     dmpsc_num_visits, dmpsc_product_cost = inputs['dmpsc_costs']
-    dmpsc_first_visit_multiplier = inputs['dmpsc_first_visit_multiplier']  # Add this line
+    cost_per_visit = inputs['cost_per_visit']
+    dmpsc_first_visit_multiplier = inputs['dmpsc_first_visit_multiplier']
     dmpim_conv_rates = inputs['dmpim_conv_rates']
     neten_conv_rates = inputs['neten_conv_rates']
     user_pop_sizes = inputs['user_pop_sizes']
 
     # Initialize populations
-    n_neten, n_dmpim = neten_start_pop, dmpim_start_pop # , n_dmpsc , dmpsc_start_pop
-    total_start_pop = n_neten + n_dmpim # + n_dmpsc
+    n_dmpsc = 0
+    n_neten, n_dmpim = neten_start_pop, dmpim_start_pop
+    total_start_pop = n_neten + n_dmpim + n_dmpsc
 
     # Convert rates to decimals
     dmpim_conv_rates = [rate / 100 for rate in dmpim_conv_rates]
     neten_conv_rates = [rate / 100 for rate in neten_conv_rates]
 
     years = 4
-    dmpim, dmpsc, neten = [n_dmpim], [0], [n_neten] # [n_dmpsc]
+    # number of users
+    dmpim, dmpsc, neten = [n_dmpim], [n_dmpsc], [n_neten]
 
     # Manual NET-EN population sizes (as provided)
     manual_neten_pop_sizes = [552108, 557630, 563206, 568838]
+
     for i in range(years):
-        if user_pop_sizes[i] is not None:   # check that there is a user supplied population for each product
-            n_neten, n_dmpim = user_pop_sizes[i] # , n_dmpsc 
+        if user_pop_sizes[i] is not None:
+            n_neten, n_dmpim, n_dmpsc = user_pop_sizes[i]
         elif neten_start_pop > 0:
-            # Calculate populations based on conversion rates from the starting population for DPMS-IM or the specified NET-EN populations
+            # Calculate populations based on conversion rates
             n_dmpim = int(dmpim_start_pop * (1 - dmpim_conv_rates[i]))
             n_neten = int(manual_neten_pop_sizes[i] * (1 - neten_conv_rates[i]))
             n_dmpsc = int(dmpim_start_pop * dmpim_conv_rates[i]) + int(manual_neten_pop_sizes[i] * neten_conv_rates[i])
-        elif neten_start_pop == 0: # if no NET-EN starting population, calculate with only on DMPA-IM. Only needed for NETEN because we have different NETEN population sizes each year.
+        elif neten_start_pop == 0:
             # Calculate populations based on conversion rates
             n_dmpim = int(dmpim_start_pop * (1 - dmpim_conv_rates[i]))
             n_neten = 0
             n_dmpsc = int(dmpim_start_pop * dmpim_conv_rates[i]) 
-
-        dmpim.append(n_dmpim) # population size over time
+        
+        # number of users
+        dmpim.append(n_dmpim)
         neten.append(n_neten)
         dmpsc.append(n_dmpsc)
 
-    # Calculate visit costs as number of users * number of visits * visit cost
-    dmpim_visit_costs = [d * dmpim_num_visits * visit_cost for d in dmpim]
-    dmpsc_visit_costs = [d * dmpsc_num_visits * visit_cost for d in dmpsc]
-    neten_visit_costs = [n * neten_num_visits * visit_cost if n > 0 else 0 for n in neten]
+    # Calculate costs
+    dmpim_visit_costs = [d * dmpim_num_visits * cost_per_visit for d in dmpim]
+    dmpsc_visit_costs = [d * dmpsc_num_visits * cost_per_visit for d in dmpsc]
+    neten_visit_costs = [n * neten_num_visits * cost_per_visit if n > 0 else 0 for n in neten]
 
-    # Calculate product costs as number of users * annual product cost
     dmpim_product_costs = [d * dmpim_product_cost for d in dmpim]
     dmpsc_product_costs = [d * dmpsc_product_cost for d in dmpsc]
     neten_product_costs = [n * neten_product_cost if n > 0 else 0 for n in neten]
 
-    # Apply first visit multiplier for DMPA-SC in Year 1. Index 0 is baseline. 
-    dmpsc_visit_costs[1] += dmpsc[1] * dmpsc_num_visits * visit_cost * (dmpsc_first_visit_multiplier - 1)
+    # Apply first visit multiplier for DMPA-SC in all years
+    for i in range(1, len(dmpsc_visit_costs)):  # Start from index 1 to skip the baseline year
+        # new_users = dmpsc[i] - dmpsc[i-1] if dmpsc[i] > dmpsc[i-1] else 0
+        dmpsc_visit_costs[i] += dmpsc[i] * cost_per_visit * (dmpsc_first_visit_multiplier - 1)
 
     # Calculate total costs
     total_costs = [sum(x) for x in zip(dmpim_visit_costs, dmpim_product_costs,
                                        dmpsc_visit_costs, dmpsc_product_costs,
                                        neten_visit_costs, neten_product_costs)]
-    print("Total costs:")
-    print(total_costs)
 
     # Calculate baseline costs (now accounting for NET-EN population variations)
     if dmpim_start_pop > 0:
-        # If NET-EN starting population is provided, calculate baseline costs
-        # baseline_dmpim_costs = [dmpim_start_pop] + [552108, 557630, 563206, 568838]
-        baseline_dmpim_costs = [dmpim_start_pop * ((dmpim_num_visits * visit_cost) + dmpim_product_cost)] * (years + 1)
+        baseline_dmpim_costs = [dmpim_start_pop * (dmpim_num_visits * cost_per_visit + dmpim_product_cost)] * (years + 1)
     else:
-        # If no NET-EN starting population, fill with zeros
         baseline_dmpim_costs = [0] * (years + 1)
 
-    # baseline_dmpim_costs = [dmpim_start_pop * (dmpim_num_visits + dmpim_product_cost)] * (years + 1)
-    # baseline_dmpsc_costs = [dmpsc_start_pop * (dmpsc_num_visits + dmpsc_product_cost)] * (years + 1)
-    # Check if user supplied a starting value for NET-EN
+    baseline_dmpsc_costs = [dmpsc_start_pop * (dmpsc_num_visits * cost_per_visit + dmpsc_product_cost)] * (years + 1)
+
     if neten_start_pop > 0:
-        # If NET-EN starting population is provided, calculate baseline costs
-        neten_populations = [neten_start_pop] + [552108, 557630, 563206, 568838]
-        baseline_neten_costs = [n * ((neten_num_visits * visit_cost) + neten_product_cost) for n in neten_populations]
+        neten_populations = [neten_start_pop] + manual_neten_pop_sizes
+        baseline_neten_costs = [n * (neten_num_visits * cost_per_visit + neten_product_cost) for n in neten_populations]
     else:
-        # If no NET-EN starting population, fill with zeros
         baseline_neten_costs = [0] * (years + 1)
-        
-    # # Calculate baseline costs for DMPS-SC
-    # if dmpsc_start_pop > 0:
-    #     baseline_dmpsc_costs = [dmpsc_start_pop * ((dmpsc_num_visits * visit_cost) + dmpsc_product_cost)] * (years + 1)
-    # else:
-    #     # If no DMPSC starting population, fill with zeros
-    
-    # baseline_dmpsc_costs = [0] * (years + 1)
 
-    print("NET-EN baseline costs:")
-    print(baseline_neten_costs)
-    print("DMPA-IM baseline costs:")
-    print(baseline_dmpim_costs)
+    baseline_costs = [sum(x) for x in zip(baseline_dmpim_costs, baseline_dmpsc_costs, baseline_neten_costs)]
 
-    baseline_costs = [sum(x) for x in zip(baseline_dmpim_costs,  baseline_neten_costs)] #
-    
-    # initial baseline costs should be the same for baseline yr and year 1
-    
-    print("Baseline costs:")
-    print(baseline_costs)
-    # Calculate total costs
-    neten_total_costs = [sum(x) for x in zip(neten_visit_costs, neten_product_costs)]
-    print("NET-EN costs:")
-    print(neten_total_costs)
-    
-    dmpim_total_costs = [sum(x) for x in zip(dmpim_visit_costs, dmpim_product_costs)]
-    print("DMPA-IM costs:")
-    print(dmpim_total_costs)
-    
-    dmpsc_total_costs = [sum(x) for x in zip(dmpsc_visit_costs, dmpsc_product_costs)]
-    print("DMPA-SC costs:")
-    print(dmpsc_total_costs)
-    
     # Calculate efficiency gains
-    efficiency_gains = []
-    print("\nCalculating efficiency gains:")
-    for year, (baseline, total) in enumerate(zip(baseline_costs, total_costs)):
-        gain = baseline - total
-        print(f"Year {year}: Baseline {baseline} - Total {total} = Gain {gain}")
-        efficiency_gains.append(gain)
-
-    print("\nFinal efficiency gains:")
-    print(efficiency_gains)
+    efficiency_gains = [b - t for b, t in zip(baseline_costs, total_costs)]
 
     # Ensure all arrays have the same length (5 elements: baseline + 4 years)
     def pad_array(arr, target_length=5):
@@ -173,7 +130,7 @@ def perform_calculations(inputs):
         'baseline_costs': pad_array(baseline_costs),
         'efficiency_gains': pad_array(efficiency_gains)
     }
-    
+
 def create_plot(df, colors):
     """Create the main plot for the dashboard."""
     fig = go.Figure()
@@ -234,6 +191,44 @@ def create_plot(df, colors):
 
     return fig
 
+# def create_plot(df, colors):
+#     """Create the main plot for the dashboard."""
+#     fig = go.Figure()
+
+#     x_labels = ['Baseline<br>(Years 1-4)', 'Intervention<br>Year 1', 'Intervention<br>Year 2', 'Intervention<br>Year 3', 'Intervention<br>Year 4']
+
+#     # Create a mapping between column prefixes and color keys
+#     color_mapping = {
+#         'NET-EN': 'neten',
+#         'DMPA-IM': 'dmpim',
+#         'DMPA-SC': 'dmpsc',
+#         'Efficiency': 'efficiency_gain'
+#     }
+
+#     for column in df.columns:
+#         prefix = column.split()[0]
+#         if prefix in color_mapping:
+#             color_key = color_mapping[prefix]
+#             if 'Visit' in column:
+#                 fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
+#                                      marker_color=colors.get(color_key, '#808080'), opacity=0.65))
+#             elif 'Product' in column:
+#                 fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
+#                                      marker_color=colors.get(color_key, '#808080'), opacity=1))
+#             else:  # Efficiency gain
+#                 fig.add_trace(go.Bar(x=x_labels, y=df[column], name=column, 
+#                                      marker_color=colors.get(color_key, '#808080'), opacity=1))
+
+#     fig.update_layout(
+#         barmode='stack',
+#         title='Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC',
+#         xaxis_title='Year',
+#         yaxis_title='Costs in Billions of Rand',
+#         yaxis=dict(tickformat=".2f"),
+#         legend=dict(x=1.05, y=1)
+#     )
+
+#     return fig
 
 def prepare_combined_data(results, inputs):
     """Prepare combined data for the dashboard table."""

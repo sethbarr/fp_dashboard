@@ -3,7 +3,6 @@ from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State
 import pandas as pd
 import dash_daq as daq
-from model import run_model
 
 # Import helper functions
 from dashboard_helpers import parse_pop_sizes, perform_calculations, create_plot, prepare_combined_data
@@ -108,11 +107,6 @@ app.layout = html.Div([
                     html.Label("DMPA-IM Starting Population"),
                     dcc.Input(id='dmpim-start-pop', type='number', value=1701061)
                 ], className='input-group'),
-                # remove option to specify sc starting pop
-                # html.Div([
-                #     html.Label("DMPA-SC Starting Population"),
-                #     dcc.Input(id='dmpsc-start-pop', type='number', value=0)
-                # ], className='input-group'),
             ]),
         ], className='container'),
         
@@ -142,7 +136,7 @@ app.layout = html.Div([
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-SC Number of Visits"),
-                    dcc.Input(id='dmpsc-visits', type='number', value=1)
+                    dcc.Input(id='dmpsc-visits', type='number', value=2)
                 ], className='input-group'),
                 html.Div([
                     html.Label("DMPA-SC First Visit Multiplier"),
@@ -179,12 +173,12 @@ app.layout = html.Div([
                     ], className='input-group'),
                 ])
             ]),
-                        html.Div([
+            html.Div([
                 html.H4("DMPA-IM to DMPA-SC Conversion Rates (%)"),
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
-                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=15.8417599) #15.8417599
+                        dcc.Input(id='dmpim-conv-rate-1', type='number', value=10) #15.8417599
                     ], className='input-group'),
                     html.Div([
                         html.Label("Year 2"),
@@ -200,7 +194,6 @@ app.layout = html.Div([
                     ], className='input-group'),
                 ])
             ])
-
         ], className='container'),
         
         html.Div([
@@ -314,7 +307,6 @@ def toggle_color_picker(n_clicks, style):
      Input('export-button', 'n_clicks')],
     [State('neten-start-pop', 'value'),
      State('dmpim-start-pop', 'value'),
-    #  State('dmpsc-start-pop', 'value'),
      State('visit-cost', 'value'),
      State('neten-visits', 'value'),
      State('neten-product-cost', 'value'),
@@ -340,15 +332,16 @@ def toggle_color_picker(n_clicks, style):
      State('dmpsc-color', 'value'),
      State('cost-saving-color', 'value')]
 )
+
 def update_graph(submit_n_clicks, export_n_clicks, *args):
     # Prepare input data
     inputs = {
         'start_pops': args[:2],
-        'visit_cost': args[2],
+        'cost_per_visit': args[2],
         'neten_costs': args[3:5],
         'dmpim_costs': args[5:7],
-        'dmpsc_costs': [args[7],args[9]], #visit multiplier is in between the slices
-        'dmpsc_first_visit_multiplier': args[8],  
+        'dmpsc_costs': [args[7], args[9]],
+        'dmpsc_first_visit_multiplier': args[8],
         'dmpim_conv_rates': args[10:14],
         'neten_conv_rates': args[14:18],
         'user_pop_sizes': [parse_pop_sizes(pop_size) for pop_size in args[18:22]],
@@ -356,9 +349,7 @@ def update_graph(submit_n_clicks, export_n_clicks, *args):
     }
 
     # Perform calculations
-    # results = perform_calculations(inputs)
-    results = run_model(inputs)
-
+    results = perform_calculations(inputs)
 
     # Prepare data for plotting and tables
     df = pd.DataFrame({
@@ -368,7 +359,7 @@ def update_graph(submit_n_clicks, export_n_clicks, *args):
         'DMPA-IM Visit': results['costs']['dmpim_visit'],
         'DMPA-SC Product': results['costs']['dmpsc_product'],
         'DMPA-SC Visit': results['costs']['dmpsc_visit'],
-        'Total Costs': results['total_costs'],  # Add this line
+        'Total Costs': results['total_costs'],
         'Efficiency gain': results['efficiency_gains']
     })
 
