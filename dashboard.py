@@ -123,7 +123,7 @@ app.layout = html.Div([
                     dcc.Input(id='neten-visits', type='number', value=6)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("NET-EN Product Cost <br> (6 Units/Year)"),
+                    html.Label("NET-EN Product Cost (6 Units/Year)"),
                     dcc.Input(id='neten-product-cost', type='number', value=143.52)
                 ], className='input-group'),
                 html.Div([
@@ -131,7 +131,7 @@ app.layout = html.Div([
                     dcc.Input(id='dmpim-visits', type='number', value=4)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("DMPA-IM Product Cost <br> (4 Units/Year)"),
+                    html.Label("DMPA-IM Product Cost (4 Units/Year)"),
                     dcc.Input(id='dmpim-product-cost', type='number', value=63.4)
                 ], className='input-group'),
                 html.Div([
@@ -143,7 +143,7 @@ app.layout = html.Div([
                     dcc.Input(id='dmpsc-first-visit-multiplier', type='number', value=2)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("DMPA-SC Product Cost <br> (4 Units/Year"),
+                    html.Label("DMPA-SC Product Cost (4 Units/Year"),
                     dcc.Input(id='dmpsc-product-cost', type='number', value=116)
                 ], className='input-group'),
             ])
