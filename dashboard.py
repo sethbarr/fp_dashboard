@@ -143,7 +143,7 @@ app.layout = html.Div([
                     dcc.Input(id='dmpsc-first-visit-multiplier', type='number', value=2)
                 ], className='input-group'),
                 html.Div([
-                    html.Label("DMPA-SC Product Cost (4 Units/Year"),
+                    html.Label("DMPA-SC Product Cost (4 Units/Year)"),
                     dcc.Input(id='dmpsc-product-cost', type='number', value=116)
                 ], className='input-group'),
             ])
