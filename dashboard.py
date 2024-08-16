@@ -150,10 +150,10 @@ app.layout = html.Div([
         ], className='container'),
         
         html.Div([
-            html.H3("Conversion Rates"),
-            html.P("Specify the conversion rates from NET-EN and DMPA-IM to DMPA-SC for each year."),
+            html.H3("Yearly Market Share Conversion"),
+            html.P("Specify the yearly market share conversions from NET-EN and DMPA-IM to DMPA-SC."),
             html.Div([
-                html.H4("NET-EN to DMPA-SC Conversion Rates (%)"),
+                html.H4("NET-EN to DMPA-SC Market Share Conversion (%)"),
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
@@ -174,7 +174,7 @@ app.layout = html.Div([
                 ])
             ]),
             html.Div([
-                html.H4("DMPA-IM to DMPA-SC Conversion Rates (%)"),
+                html.H4("DMPA-IM to DMPA-SC Market Share Conversion (%)"),
                 html.Div([
                     html.Div([
                         html.Label("Year 1"),
