@@ -182,7 +182,7 @@ def create_plot(df, colors):
 
     fig.update_layout(
         barmode='stack',
-        title='Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified conversion rates from DMPA-IM and NET-EN to DMPA-SC.',
+        title='Budget impact analysis of DMPA-SC for self injection introduction in South Africa<br>over 4 years with specified market share conversions from DMPA-IM and NET-EN to DMPA-SC.',
         xaxis_title='Year',
         yaxis_title='Costs in Billions of Rand',
         yaxis=dict(tickformat=".2f"),
